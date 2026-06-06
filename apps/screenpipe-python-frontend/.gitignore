@@ -1,0 +1,6 @@
+# Allow Python source files in this directory
+!*.py
+__pycache__/
+*.pyc
+.venv/
+venv/

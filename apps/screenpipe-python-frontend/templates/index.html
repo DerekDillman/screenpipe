@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}screenpipe{% endblock %}
+{% block content %}
+<div class="hero">
+  <h1>everything you've<br>seen, said, or heard</h1>
+  <p>your personal ai context layer — search history or watch the live feed</p>
+  <div class="hero-actions">
+    <a href="/search" class="btn">SEARCH</a>
+    <a href="/live" class="btn btn-ghost">LIVE FEED</a>
+  </div>
+</div>
+
+<div class="feature-grid">
+  <div class="feature-card">
+    <h2>search & rewind</h2>
+    <p>
+      query across screen captures, audio transcripts, and accessibility tree
+      elements — filtered by app, time range, or keyword
+    </p>
+    <a href="/search" class="btn" style="font-size: 10px;">OPEN SEARCH →</a>
+  </div>
+  <div class="feature-card">
+    <h2>live timeline</h2>
+    <p>
+      watch ocr, audio transcription, and ui events stream in real time as
+      screenpipe captures your screen and audio
+    </p>
+    <a href="/live" class="btn btn-ghost" style="font-size: 10px;">OPEN LIVE →</a>
+  </div>
+</div>
+{% endblock %}

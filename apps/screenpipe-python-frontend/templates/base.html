@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}screenpipe{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/htmx.org@1.9.12" defer></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #fff;
+      --fg: #000;
+      --muted: #666;
+      --dim: #999;
+      --border: #ccc;
+      --border-active: #000;
+      --font-heading: 'Space Grotesk', system-ui, sans-serif;
+      --font-body: 'Crimson Text', Baskerville, 'Times New Roman', serif;
+      --font-mono: 'IBM Plex Mono', 'Courier New', monospace;
+      --t: 150ms;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #000;
+        --fg: #fff;
+        --muted: #999;
+        --dim: #666;
+        --border: #333;
+        --border-active: #fff;
+      }
+    }
+
+    html, body {
+      background: var(--bg);
+      color: var(--fg);
+      font-family: var(--font-body);
+      font-size: 16px;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    h1, h2, h3 {
+      font-family: var(--font-heading);
+      font-weight: 500;
+      letter-spacing: -0.02em;
+      text-transform: lowercase;
+    }
+
+    code, .mono {
+      font-family: var(--font-mono);
+      font-size: 13px;
+    }
+
+    a { color: var(--fg); text-decoration: underline; text-underline-offset: 3px; }
+    a:hover { background: var(--fg); color: var(--bg); text-decoration: none; }
+
+    /* ── layout ── */
+    .container { max-width: 920px; margin: 0 auto; padding: 0 24px; }
+
+    /* ── nav ── */
+    nav {
+      border-bottom: 1px solid var(--border);
+    }
+    nav .inner {
+      display: flex;
+      align-items: center;
+      gap: 36px;
+      max-width: 920px;
+      margin: 0 auto;
+      padding: 14px 24px;
+    }
+    .wordmark {
+      font-family: var(--font-heading);
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      text-decoration: none;
+      color: var(--fg);
+    }
+    .wordmark:hover { background: none; color: var(--muted); }
+
+    .nav-links { display: flex; gap: 24px; list-style: none; }
+    .nav-links a {
+      font-family: var(--font-heading);
+      font-size: 13px;
+      font-weight: 400;
+      text-decoration: none;
+      color: var(--muted);
+      text-transform: lowercase;
+      transition: color var(--t);
+    }
+    .nav-links a:hover { color: var(--fg); background: none; }
+    .nav-links a.active { color: var(--fg); }
+
+    main { padding: 48px 0 80px; }
+
+    /* ── buttons ── */
+    .btn {
+      font-family: var(--font-heading);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      padding: 9px 20px;
+      border: 1px solid var(--fg);
+      background: var(--bg);
+      color: var(--fg);
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all var(--t);
+      border-radius: 0;
+      line-height: 1;
+    }
+    .btn:hover { background: var(--fg); color: var(--bg); }
+    .btn:disabled { opacity: 0.35; cursor: not-allowed; }
+    .btn-ghost { border-color: var(--border); color: var(--muted); }
+    .btn-ghost:hover { border-color: var(--fg); background: var(--fg); color: var(--bg); }
+
+    /* ── inputs ── */
+    input[type="text"],
+    input[type="search"],
+    select {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      padding: 0 12px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      color: var(--fg);
+      border-radius: 0;
+      outline: none;
+      width: 100%;
+      height: 40px;
+      transition: border-color var(--t);
+      -webkit-appearance: none;
+      appearance: none;
+    }
+    input[type="text"]:focus,
+    input[type="search"]:focus,
+    select:focus {
+      border-color: var(--border-active);
+      outline: 1px solid var(--border-active);
+      outline-offset: 1px;
+    }
+    input::placeholder { color: var(--dim); }
+
+    /* ── page header ── */
+    .page-header {
+      margin-bottom: 36px;
+      padding-bottom: 24px;
+      border-bottom: 1px solid var(--border);
+    }
+    .page-header h1 { font-size: 26px; margin-bottom: 6px; }
+    .page-header p { color: var(--muted); font-size: 15px; }
+
+    /* ── home hero ── */
+    .hero { padding: 64px 0 56px; }
+    .hero h1 { font-size: 52px; line-height: 1.05; margin-bottom: 14px; }
+    .hero p { font-size: 18px; color: var(--muted); margin-bottom: 36px; }
+    .hero-actions { display: flex; gap: 12px; }
+
+    .feature-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      border: 1px solid var(--border);
+    }
+    .feature-card {
+      padding: 28px;
+    }
+    .feature-card:first-child {
+      border-right: 1px solid var(--border);
+    }
+    .feature-card h2 { font-size: 15px; margin-bottom: 10px; }
+    .feature-card p { color: var(--muted); font-size: 15px; margin-bottom: 18px; }
+
+    /* ── search form ── */
+    .search-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .search-row input { flex: 1; }
+    .filter-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 28px;
+    }
+    .filter-row select { width: 160px; }
+    .filter-row input { width: 160px; }
+
+    /* ── loading ── */
+    .htmx-indicator { display: none; }
+    .htmx-request .htmx-indicator { display: inline; }
+    .htmx-request.htmx-indicator { display: inline; }
+    .loading-text {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+    }
+
+    /* ── result items ── */
+    .results-header {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: 0.06em;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .result-item {
+      border-bottom: 1px solid var(--border);
+      padding: 14px 0;
+    }
+    .result-item:first-of-type { border-top: 1px solid var(--border); }
+
+    .result-type {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--dim);
+      margin-bottom: 5px;
+    }
+    .result-text {
+      font-family: var(--font-body);
+      font-size: 16px;
+      line-height: 1.5;
+      margin-bottom: 6px;
+      word-break: break-word;
+    }
+    .result-meta {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--dim);
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+    .result-meta span::before { content: ''; }
+
+    /* ── pagination ── */
+    .pagination {
+      padding: 28px 0 0;
+      display: flex;
+      justify-content: center;
+    }
+
+    /* ── empty / error ── */
+    .empty {
+      padding: 60px 0;
+      text-align: center;
+      color: var(--muted);
+      font-family: var(--font-heading);
+      font-size: 14px;
+      text-transform: lowercase;
+    }
+    .error-box {
+      border: 1px solid var(--fg);
+      padding: 16px 20px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+    }
+    .error-box strong { display: block; margin-bottom: 4px; }
+
+    /* ── live feed ── */
+    .live-header {
+      margin-bottom: 28px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--border);
+    }
+    .live-header h1 { font-size: 26px; margin-bottom: 10px; }
+    .live-meta {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+    }
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      background: var(--dim);
+      flex-shrink: 0;
+    }
+    .status-dot.live {
+      background: var(--fg);
+      animation: pulse 1.6s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.15; }
+    }
+
+    .event-card {
+      border-bottom: 1px solid var(--border);
+      padding: 12px 0;
+      animation: slidein var(--t) ease;
+    }
+    .event-card:first-child { border-top: 1px solid var(--border); }
+    @keyframes slidein {
+      from { opacity: 0; transform: translateY(-6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .event-name {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--dim);
+      margin-bottom: 4px;
+    }
+    .event-content {
+      font-family: var(--font-body);
+      font-size: 15px;
+      line-height: 1.45;
+      word-break: break-word;
+    }
+    .event-meta {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--dim);
+      margin-top: 4px;
+    }
+
+    .feed-controls {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    /* ── responsive ── */
+    @media (max-width: 640px) {
+      .hero h1 { font-size: 34px; }
+      .feature-grid { grid-template-columns: 1fr; }
+      .feature-card:first-child { border-right: none; border-bottom: 1px solid var(--border); }
+      .filter-row { flex-direction: column; }
+      .filter-row select,
+      .filter-row input { width: 100%; }
+    }
+  </style>
+  {% block head %}{% endblock %}
+</head>
+<body>
+  <nav>
+    <div class="inner">
+      <a class="wordmark" href="/">screenpipe</a>
+      <ul class="nav-links">
+        <li><a href="/search" {% if request.url.path.startswith('/search') %}class="active"{% endif %}>search</a></li>
+        <li><a href="/live" {% if request.url.path == '/live' %}class="active"{% endif %}>live</a></li>
+      </ul>
+    </div>
+  </nav>
+  <main>
+    <div class="container">
+      {% block content %}{% endblock %}
+    </div>
+  </main>
+</body>
+</html>

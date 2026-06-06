@@ -1,0 +1,174 @@
+{% extends "base.html" %}
+{% block title %}screenpipe — live{% endblock %}
+{% block head %}
+<script>
+(function () {
+  "use strict";
+
+  var MAX_CARDS = 300;
+  var paused = false;
+  var eventCount = 0;
+  var es = null;
+
+  function esc(str) {
+    return String(str)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
+
+  function fmtTime(ts) {
+    if (!ts) return "";
+    try { return new Date(ts).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" }); }
+    catch (e) { return ""; }
+  }
+
+  function extract(ev) {
+    var name = ev.name || "event";
+    var d = ev.data || {};
+    var text = "";
+    var meta = "";
+    var time = "";
+
+    if (name === "ocr_result") {
+      text = d.text || d.ocr_text || "";
+      meta = [d.app_name, d.window_name].filter(Boolean).join(" · ");
+      time = fmtTime(d.timestamp);
+    } else if (name === "ui_frame") {
+      text = d.text || "";
+      meta = [d.app_name, d.window_name].filter(Boolean).join(" · ");
+      time = fmtTime(d.timestamp);
+    } else if (name === "audio") {
+      text = d.transcription || d.text || "";
+      meta = d.device_name || "";
+      time = fmtTime(d.timestamp);
+    } else if (name === "error") {
+      text = d.message || JSON.stringify(d);
+    } else {
+      var s = typeof d === "string" ? d : JSON.stringify(d);
+      text = s.length > 400 ? s.slice(0, 400) + "…" : s;
+    }
+
+    if (!text.trim()) {
+      var s2 = typeof d === "string" ? d : JSON.stringify(d);
+      text = s2.length > 400 ? s2.slice(0, 400) + "…" : s2;
+    }
+
+    return { name: name, text: text.trim(), meta: meta, time: time };
+  }
+
+  function addCard(ev) {
+    var feed = document.getElementById("feed");
+    if (!feed) return;
+
+    var empty = document.getElementById("empty-state");
+    if (empty) empty.remove();
+
+    var info = extract(ev);
+
+    var card = document.createElement("div");
+    card.className = "event-card";
+    card.innerHTML =
+      '<div class="event-name">' + esc(info.name.replace(/_/g, " ")) + "</div>" +
+      '<div class="event-content">' + esc(info.text) + "</div>" +
+      (info.meta || info.time
+        ? '<div class="event-meta">' +
+            (info.time ? '<span>' + esc(info.time) + '</span>' : '') +
+            (info.time && info.meta ? ' · ' : '') +
+            (info.meta ? esc(info.meta) : '') +
+          "</div>"
+        : "");
+
+    feed.prepend(card);
+
+    while (feed.children.length > MAX_CARDS) {
+      feed.removeChild(feed.lastChild);
+    }
+
+    eventCount++;
+    var ctr = document.getElementById("event-count");
+    if (ctr) ctr.textContent = eventCount;
+  }
+
+  function setStatus(connected, label) {
+    var dot = document.getElementById("status-dot");
+    var lbl = document.getElementById("status-label");
+    if (dot) {
+      dot.classList.toggle("live", connected);
+    }
+    if (lbl) lbl.textContent = label;
+  }
+
+  function connect() {
+    if (es) { es.close(); es = null; }
+    setStatus(false, "connecting…");
+
+    es = new EventSource("/sse/events");
+
+    es.onopen = function () {
+      setStatus(true, "connected");
+    };
+
+    es.onmessage = function (e) {
+      if (paused) return;
+      try {
+        var ev = JSON.parse(e.data);
+        addCard(ev);
+      } catch (err) {
+        console.error("SSE parse error", err);
+      }
+    };
+
+    es.onerror = function () {
+      setStatus(false, "disconnected — retrying…");
+    };
+  }
+
+  document.addEventListener("DOMContentLoaded", function () {
+    connect();
+
+    var pauseBtn = document.getElementById("btn-pause");
+    if (pauseBtn) {
+      pauseBtn.addEventListener("click", function () {
+        paused = !paused;
+        pauseBtn.textContent = paused ? "RESUME" : "PAUSE";
+      });
+    }
+
+    var clearBtn = document.getElementById("btn-clear");
+    if (clearBtn) {
+      clearBtn.addEventListener("click", function () {
+        var feed = document.getElementById("feed");
+        if (feed) feed.innerHTML = "";
+        eventCount = 0;
+        var ctr = document.getElementById("event-count");
+        if (ctr) ctr.textContent = "0";
+      });
+    }
+  });
+}());
+</script>
+{% endblock %}
+{% block content %}
+<div class="live-header">
+  <h1>live timeline</h1>
+  <div class="live-meta">
+    <div class="status">
+      <div id="status-dot" class="status-dot"></div>
+      <span id="status-label" class="mono">connecting…</span>
+    </div>
+    <span class="mono" style="color: var(--muted); font-size: 11px;">
+      <span id="event-count">0</span> events
+    </span>
+    <div class="feed-controls">
+      <button id="btn-pause" class="btn btn-ghost" style="font-size: 10px;">PAUSE</button>
+      <button id="btn-clear" class="btn btn-ghost" style="font-size: 10px;">CLEAR</button>
+    </div>
+  </div>
+</div>
+
+<div id="feed">
+  <div class="empty" id="empty-state">waiting for events from screenpipe…</div>
+</div>
+{% endblock %}

@@ -1,0 +1,89 @@
+{% if error %}
+<div class="error-box">
+  <strong>connection error</strong>
+  {{ error }}
+</div>
+{% elif not data.data %}
+<div class="empty">
+  {% if q %}no results for "{{ q }}"{% else %}no captures found{% endif %}
+</div>
+{% else %}
+{% if offset == 0 %}
+<div class="results-header">
+  {{ data.pagination.total }} result{% if data.pagination.total != 1 %}s{% endif %}{% if q %} for "{{ q }}"{% endif %}
+</div>
+{% endif %}
+
+{% for item in data.data %}
+{% set t = item.type %}
+{% set c = item.content %}
+<div class="result-item">
+  <div class="result-type">{{ t }}</div>
+
+  {% if t == 'OCR' %}
+    <div class="result-text">
+      {{ c.text[:600] }}{% if c.text | length > 600 %}…{% endif %}
+    </div>
+    <div class="result-meta">
+      <span>{{ c.timestamp[:19] | replace("T", " ") }}</span>
+      {% if c.app_name %}<span>{{ c.app_name }}</span>{% endif %}
+      {% if c.window_name %}<span>{{ c.window_name }}</span>{% endif %}
+      {% if c.device_name %}<span>{{ c.device_name }}</span>{% endif %}
+    </div>
+
+  {% elif t == 'Audio' %}
+    <div class="result-text">
+      {{ c.transcription[:600] }}{% if c.transcription | length > 600 %}…{% endif %}
+    </div>
+    <div class="result-meta">
+      <span>{{ c.timestamp[:19] | replace("T", " ") }}</span>
+      {% if c.device_name %}<span>{{ c.device_name }}</span>{% endif %}
+      {% if c.speaker_name %}<span>{{ c.speaker_name }}</span>{% endif %}
+    </div>
+
+  {% elif t == 'UI' %}
+    <div class="result-text">
+      {{ c.text[:600] }}{% if c.text | length > 600 %}…{% endif %}
+    </div>
+    <div class="result-meta">
+      <span>{{ c.timestamp[:19] | replace("T", " ") }}</span>
+      {% if c.app_name %}<span>{{ c.app_name }}</span>{% endif %}
+      {% if c.window_name %}<span>{{ c.window_name }}</span>{% endif %}
+    </div>
+
+  {% elif t == 'Input' %}
+    <div class="result-text">{{ c.text_content or c.event_type or "input event" }}</div>
+    <div class="result-meta">
+      <span>{{ c.timestamp[:19] | replace("T", " ") }}</span>
+      {% if c.app_name %}<span>{{ c.app_name }}</span>{% endif %}
+      {% if c.window_title %}<span>{{ c.window_title }}</span>{% endif %}
+    </div>
+
+  {% elif t == 'Memory' %}
+    <div class="result-text">
+      {{ c.content[:600] }}{% if c.content | length > 600 %}…{% endif %}
+    </div>
+    <div class="result-meta">
+      <span>{{ c.created_at[:19] | replace("T", " ") }}</span>
+      {% if c.source %}<span>{{ c.source }}</span>{% endif %}
+    </div>
+
+  {% else %}
+    <div class="result-text mono">{{ c | tojson }}</div>
+  {% endif %}
+</div>
+{% endfor %}
+
+{% if data.pagination.total > next_offset %}
+<div id="pagination" class="pagination">
+  <button
+    class="btn btn-ghost"
+    hx-get="/search/results"
+    hx-target="#pagination"
+    hx-swap="outerHTML"
+    hx-indicator="#loading"
+    hx-vals='{"q": {{ q | tojson }}, "content_type": {{ content_type | tojson }}, "app_name": {{ app_name | tojson }}, "start_time": {{ start_time | tojson }}, "end_time": {{ end_time | tojson }}, "offset": {{ next_offset }}, "limit": {{ limit }}}'
+  >LOAD MORE</button>
+</div>
+{% endif %}
+{% endif %}
