@@ -1,0 +1,12 @@
+{% if error %}
+<div class="err-box">{{ error }}</div>
+{% elif not devices %}
+<div class="empty">no audio devices found</div>
+{% else %}
+{% for d in devices %}
+<div class="device-item">
+  <span class="device-type">{{ "in" if d.is_input else "out" }}</span>
+  <span class="device-name">{{ d.name or d.device_name or d }}</span>
+</div>
+{% endfor %}
+{% endif %}

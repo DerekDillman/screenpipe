@@ -1,0 +1,20 @@
+{% if error %}
+<div class="err-box">{{ error }}</div>
+{% elif not pipes %}
+<div class="empty">no pipes configured</div>
+{% else %}
+{% for p in pipes %}
+<div class="pipe-item">
+  <div>
+    <div class="pipe-name">{{ p.name or p.id }}</div>
+    {% if p.description %}<div style="font-size:13px;color:var(--muted);font-family:var(--font-b)">{{ p.description }}</div>{% endif %}
+  </div>
+  <div class="row">
+    <span class="mono" style="font-size:11px;color:var(--dim)">
+      <span class="dot {{ 'on' if p.enabled else 'off' }}"></span>
+      {{ "enabled" if p.enabled else "disabled" }}
+    </span>
+  </div>
+</div>
+{% endfor %}
+{% endif %}

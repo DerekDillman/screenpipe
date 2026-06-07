@@ -1,0 +1,48 @@
+{% if health_err %}
+<div class="stat-grid">
+  <div class="stat-card" style="grid-column:1/-1">
+    <div class="stat-label">status</div>
+    <div style="font-family:var(--font-m);font-size:13px;color:var(--muted)">{{ health_err }}</div>
+  </div>
+</div>
+{% else %}
+<div class="stat-grid">
+  <div class="stat-card">
+    <div class="stat-label">screenpipe</div>
+    <div class="stat-value" style="font-size:20px">
+      <span class="dot on"></span>running
+    </div>
+    <div class="stat-sub mono">{{ health.version if health and health.version else "connected" }}</div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-label">vision</div>
+    {% set fps = v_metrics.fps if v_metrics and v_metrics.fps else 0 %}
+    <div class="stat-value" style="font-size:20px">
+      {% if fps > 0 %}<span class="dot on"></span>{% else %}<span class="dot off"></span>{% endif %}
+      {{ "%.1f"|format(fps) }} fps
+    </div>
+    <div class="stat-sub mono">{{ v_metrics.total_frames if v_metrics and v_metrics.total_frames else "—" }} frames</div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-label">audio</div>
+    {% set chunks = a_metrics.total_chunks if a_metrics and a_metrics.total_chunks else 0 %}
+    <div class="stat-value" style="font-size:20px">
+      {% if chunks > 0 %}<span class="dot on"></span>{% else %}<span class="dot off"></span>{% endif %}
+      {{ chunks }} chunks
+    </div>
+    {% if a_metrics and a_metrics.total_duration_secs %}
+    <div class="stat-sub mono">{{ (a_metrics.total_duration_secs / 60)|int }} min captured</div>
+    {% else %}
+    <div class="stat-sub mono">—</div>
+    {% endif %}
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-label">frames captured</div>
+    <div class="stat-value">{{ v_metrics.total_frames if v_metrics and v_metrics.total_frames else "—" }}</div>
+    <div class="stat-sub mono">all time</div>
+  </div>
+</div>
+{% endif %}

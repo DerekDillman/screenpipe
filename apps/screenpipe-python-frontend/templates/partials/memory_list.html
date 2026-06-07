@@ -1,0 +1,43 @@
+{% if error %}
+<div class="err-box">{{ error }}</div>
+{% elif not memories %}
+<div class="empty">{% if q %}no memories matching "{{ q }}"{% else %}no memories yet — add one above{% endif %}</div>
+{% else %}
+<div style="font-family:var(--font-m);font-size:11px;color:var(--muted);margin-bottom:12px">
+  {{ memories|length }} memor{{ "y" if memories|length == 1 else "ies" }}{% if q %} matching "{{ q }}"{% endif %}
+</div>
+
+{% for m in memories %}
+<div class="memory-item" id="memory-{{ m.id }}">
+  <div class="row-between">
+    <div style="flex:1">
+      <div class="memory-content">{{ m.content[:500] }}{% if m.content|length > 500 %}…{% endif %}</div>
+      <div class="memory-meta">
+        {% if m.created_at %}<span>{{ m.created_at[:19]|replace("T"," ") }}</span>{% endif %}
+        {% if m.source %}<span>{{ m.source }}</span>{% endif %}
+        {% if m.importance is not none %}<span>importance: {{ "%.2f"|format(m.importance) }}</span>{% endif %}
+        {% for tag in m.tags or [] %}<span class="tag">{{ tag }}</span>{% endfor %}
+      </div>
+    </div>
+    <button class="btn btn-sm btn-ghost"
+            style="flex-shrink:0"
+            hx-delete="/actions/memory/{{ m.id }}"
+            hx-target="#memory-{{ m.id }}"
+            hx-swap="outerHTML"
+            hx-confirm="delete this memory?">DEL</button>
+  </div>
+</div>
+{% endfor %}
+
+{% if next_offset < total %}
+<div id="mem-pagination" class="pagination">
+  <button class="btn btn-ghost"
+          hx-get="/partials/memory"
+          hx-target="#mem-pagination"
+          hx-swap="outerHTML"
+          hx-vals='{"q":{{ q|tojson }},"offset":{{ next_offset }},"limit":{{ limit }}}'>
+    LOAD MORE
+  </button>
+</div>
+{% endif %}
+{% endif %}

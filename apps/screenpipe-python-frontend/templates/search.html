@@ -1,94 +1,60 @@
 {% extends "base.html" %}
 {% block title %}screenpipe — search{% endblock %}
 {% block content %}
-<div class="page-header">
+<div class="ph">
   <h1>search</h1>
-  <p>query your screen history across all capture types</p>
+  <span class="ph-sub">screen · audio · ui · input · memory</span>
 </div>
 
-<div class="search-row">
-  <input
-    type="search"
-    id="q"
-    name="q"
-    placeholder="search for anything..."
-    autofocus
-    autocomplete="off"
-    hx-get="/search/results"
-    hx-target="#results"
-    hx-swap="innerHTML"
-    hx-trigger="input changed delay:500ms, keyup[key=='Enter']"
-    hx-include="#content-type,#app-filter,#start-time,#end-time"
-    hx-indicator="#loading"
-  >
-  <button
-    class="btn"
-    hx-get="/search/results"
-    hx-target="#results"
-    hx-swap="innerHTML"
-    hx-include="#q,#content-type,#app-filter,#start-time,#end-time"
-    hx-indicator="#loading"
-  >SEARCH</button>
+<div class="search-main">
+  <input type="search" id="q" name="q" placeholder="search anything…" autofocus autocomplete="off"
+         hx-get="/search/results" hx-target="#results" hx-swap="innerHTML"
+         hx-trigger="input changed delay:450ms, keyup[key=='Enter']"
+         hx-include="#content-type,#app-filter,#start-time,#end-time,#frames-toggle"
+         hx-indicator="#loading">
+  <button class="btn" hx-get="/search/results" hx-target="#results" hx-swap="innerHTML"
+          hx-include="#q,#content-type,#app-filter,#start-time,#end-time,#frames-toggle"
+          hx-indicator="#loading">SEARCH</button>
 </div>
 
-<div class="filter-row">
-  <select
-    id="content-type"
-    name="content_type"
-    hx-get="/search/results"
-    hx-target="#results"
-    hx-swap="innerHTML"
-    hx-include="#q,#app-filter,#start-time,#end-time"
-    hx-trigger="change"
-    hx-indicator="#loading"
-  >
+<div class="filter-bar">
+  <select id="content-type" name="content_type"
+          hx-get="/search/results" hx-target="#results" hx-swap="innerHTML"
+          hx-include="#q,#app-filter,#start-time,#end-time,#frames-toggle"
+          hx-trigger="change" hx-indicator="#loading">
     <option value="all">all types</option>
     <option value="ocr">screen (ocr)</option>
     <option value="audio">audio</option>
     <option value="ui">ui elements</option>
   </select>
 
-  <input
-    type="text"
-    id="app-filter"
-    name="app_name"
-    placeholder="app name..."
-    hx-get="/search/results"
-    hx-target="#results"
-    hx-swap="innerHTML"
-    hx-include="#q,#content-type,#start-time,#end-time"
-    hx-trigger="input changed delay:700ms"
-    hx-indicator="#loading"
-  >
+  <input type="text" id="app-filter" name="app_name" placeholder="app name…"
+         hx-get="/search/results" hx-target="#results" hx-swap="innerHTML"
+         hx-include="#q,#content-type,#start-time,#end-time,#frames-toggle"
+         hx-trigger="input changed delay:700ms" hx-indicator="#loading">
 
-  <input
-    type="text"
-    id="start-time"
-    name="start_time"
-    placeholder="from (e.g. 2025-06-01)"
-    hx-get="/search/results"
-    hx-target="#results"
-    hx-swap="innerHTML"
-    hx-include="#q,#content-type,#app-filter,#end-time"
-    hx-trigger="change"
-    hx-indicator="#loading"
-  >
+  <input type="text" id="start-time" name="start_time" placeholder="from (2025-06-01)"
+         hx-get="/search/results" hx-target="#results" hx-swap="innerHTML"
+         hx-include="#q,#content-type,#app-filter,#end-time,#frames-toggle"
+         hx-trigger="change" hx-indicator="#loading">
 
-  <input
-    type="text"
-    id="end-time"
-    name="end_time"
-    placeholder="to (e.g. 2025-06-06)"
-    hx-get="/search/results"
-    hx-target="#results"
-    hx-swap="innerHTML"
-    hx-include="#q,#content-type,#app-filter,#start-time"
-    hx-trigger="change"
-    hx-indicator="#loading"
-  >
+  <input type="text" id="end-time" name="end_time" placeholder="to (2025-06-07)"
+         hx-get="/search/results" hx-target="#results" hx-swap="innerHTML"
+         hx-include="#q,#content-type,#app-filter,#start-time,#frames-toggle"
+         hx-trigger="change" hx-indicator="#loading">
+
+  <label style="display:flex;align-items:center;gap:6px;font-family:var(--font-m);font-size:12px;cursor:pointer;white-space:nowrap">
+    <input type="checkbox" id="frames-toggle" name="include_frames" value="true"
+           hx-get="/search/results" hx-target="#results" hx-swap="innerHTML"
+           hx-include="#q,#content-type,#app-filter,#start-time,#end-time"
+           hx-trigger="change" hx-indicator="#loading">
+    show frames
+  </label>
 </div>
 
-<span id="loading" class="htmx-indicator loading-text">searching...</span>
+<div style="margin-bottom:12px">
+  <span id="loading" class="htmx-indicator loading-text">searching…</span>
+</div>
 
 <div id="results">
   <div class="empty">type a query or leave blank to browse recent captures</div>

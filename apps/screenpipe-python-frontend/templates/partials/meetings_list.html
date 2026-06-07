@@ -1,0 +1,28 @@
+{% if error %}
+<div class="err-box">{{ error }}</div>
+{% elif not meetings %}
+<div class="empty">no meetings recorded yet — start one above</div>
+{% else %}
+{% for m in meetings %}
+<div class="meeting-item" id="meeting-{{ m.id }}">
+  <div>
+    <div class="meeting-title">{{ m.title or "untitled meeting" }}</div>
+    <div class="meeting-meta">
+      {% if m.start_time %}<span>started {{ m.start_time[:19]|replace("T"," ") }}</span>{% endif %}
+      {% if m.end_time %}<span>ended {{ m.end_time[:19]|replace("T"," ") }}</span>{% endif %}
+      {% if not m.end_time %}<span><span class="dot on"></span>recording</span>{% endif %}
+    </div>
+  </div>
+  <div class="row">
+    {% if not m.end_time %}
+    <button class="btn btn-sm"
+            hx-post="/actions/meeting/stop/{{ m.id }}"
+            hx-target="#meetings-list"
+            hx-swap="innerHTML">STOP</button>
+    {% else %}
+    <span class="mono" style="font-size:11px;color:var(--dim)">completed</span>
+    {% endif %}
+  </div>
+</div>
+{% endfor %}
+{% endif %}

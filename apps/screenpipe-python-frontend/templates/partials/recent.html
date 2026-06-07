@@ -1,0 +1,34 @@
+{% if error %}
+<div class="err-box">{{ error }}</div>
+{% elif not data or not data.data %}
+<div class="empty">no captures yet</div>
+{% else %}
+{% for item in data.data %}
+{% set t = item.type %}
+{% set c = item.content %}
+<div class="item">
+  <div class="item-type">{{ t }}</div>
+  {% if t == 'OCR' %}
+    <div class="item-text">{{ c.text[:200] }}{% if c.text|length > 200 %}…{% endif %}</div>
+    <div class="item-meta">
+      <span>{{ c.timestamp[:19]|replace("T"," ") }}</span>
+      {% if c.app_name %}<span>{{ c.app_name }}</span>{% endif %}
+    </div>
+  {% elif t == 'Audio' %}
+    <div class="item-text">{{ c.transcription[:200] }}{% if c.transcription|length > 200 %}…{% endif %}</div>
+    <div class="item-meta">
+      <span>{{ c.timestamp[:19]|replace("T"," ") }}</span>
+      {% if c.device_name %}<span>{{ c.device_name }}</span>{% endif %}
+    </div>
+  {% elif t == 'UI' %}
+    <div class="item-text">{{ c.text[:200] }}{% if c.text|length > 200 %}…{% endif %}</div>
+    <div class="item-meta">
+      <span>{{ c.timestamp[:19]|replace("T"," ") }}</span>
+      {% if c.app_name %}<span>{{ c.app_name }}</span>{% endif %}
+    </div>
+  {% else %}
+    <div class="item-text mono">{{ c | tojson | truncate(200) }}</div>
+  {% endif %}
+</div>
+{% endfor %}
+{% endif %}

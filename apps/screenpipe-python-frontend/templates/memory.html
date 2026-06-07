@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}screenpipe — memory{% endblock %}
+{% block content %}
+<div class="ph">
+  <h1>memory</h1>
+  <span class="ph-sub">knowledge base — rag foundation</span>
+</div>
+
+<!-- add memory -->
+<div class="add-box">
+  <h3>add to memory</h3>
+  <form hx-post="/actions/memory/add"
+        hx-target="#memory-list"
+        hx-swap="innerHTML"
+        hx-on::after-request="this.reset()">
+    <div style="margin-bottom:8px">
+      <label class="field-label">content</label>
+      <textarea name="content" placeholder="what do you want to remember?" required></textarea>
+    </div>
+    <div class="form-row">
+      <div style="flex:1">
+        <label class="field-label">source</label>
+        <input type="text" name="source" value="manual" placeholder="source">
+      </div>
+      <div style="flex:1">
+        <label class="field-label">tags (comma separated)</label>
+        <input type="text" name="tags" placeholder="tag1, tag2">
+      </div>
+      <button type="submit" class="btn" style="align-self:flex-end">ADD</button>
+    </div>
+  </form>
+</div>
+
+<!-- search + list -->
+<div class="row-between" style="margin-bottom:14px">
+  <div class="section-title" style="margin:0">stored memories</div>
+  <input type="search" placeholder="filter memories…" style="width:220px"
+         hx-get="/partials/memory"
+         hx-target="#memory-list"
+         hx-swap="innerHTML"
+         hx-trigger="input changed delay:400ms"
+         name="q"
+         hx-indicator="#mem-loading">
+  <span id="mem-loading" class="htmx-indicator loading-text">searching…</span>
+</div>
+
+<div id="memory-list"
+     hx-get="/partials/memory"
+     hx-trigger="load"
+     hx-swap="innerHTML">
+  <div class="empty">loading…</div>
+</div>
+{% endblock %}

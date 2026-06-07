@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}screenpipe — dashboard{% endblock %}
+{% block content %}
+<div class="ph">
+  <h1>dashboard</h1>
+  <span class="ph-sub" id="last-update"></span>
+</div>
+
+<!-- live-polled status strip -->
+<div id="status-strip"
+     hx-get="/partials/status"
+     hx-trigger="load, every 5s"
+     hx-swap="innerHTML">
+  <div class="stat-grid">
+    <div class="stat-card"><div class="stat-label">status</div><div class="stat-value" style="font-size:18px;color:var(--muted)">loading…</div></div>
+    <div class="stat-card"><div class="stat-label">vision</div><div class="stat-value" style="font-size:18px;color:var(--muted)">—</div></div>
+    <div class="stat-card"><div class="stat-label">audio</div><div class="stat-value" style="font-size:18px;color:var(--muted)">—</div></div>
+    <div class="stat-card"><div class="stat-label">frames</div><div class="stat-value" style="font-size:18px;color:var(--muted)">—</div></div>
+  </div>
+</div>
+
+<script>
+  document.body.addEventListener("htmx:afterSwap", function(e) {
+    if (e.detail.target.id === "status-strip") {
+      document.getElementById("last-update").textContent =
+        "updated " + new Date().toLocaleTimeString();
+    }
+  });
+</script>
+
+<!-- quick actions -->
+<div class="section">
+  <div class="section-title">quick controls</div>
+  <div class="row">
+    <button class="btn btn-sm"
+            hx-post="/actions/audio/start"
+            hx-target="#audio-feedback"
+            hx-swap="innerHTML">START AUDIO</button>
+    <button class="btn btn-sm btn-ghost"
+            hx-post="/actions/audio/stop"
+            hx-target="#audio-feedback"
+            hx-swap="innerHTML">STOP AUDIO</button>
+    <a href="/capture" class="btn btn-sm btn-ghost">MANAGE CAPTURE →</a>
+    <span id="audio-feedback" style="font-family:var(--font-m);font-size:12px;color:var(--muted)"></span>
+  </div>
+</div>
+
+<!-- recent captures -->
+<div class="section">
+  <div class="row-between" style="margin-bottom:12px">
+    <div class="section-title" style="margin:0">recent captures</div>
+    <a href="/search" class="btn btn-sm btn-ghost">SEARCH ALL →</a>
+  </div>
+  <div id="recent"
+       hx-get="/partials/recent"
+       hx-trigger="load"
+       hx-swap="innerHTML">
+    <div class="empty">loading…</div>
+  </div>
+</div>
+{% endblock %}

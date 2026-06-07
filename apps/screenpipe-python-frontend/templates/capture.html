@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}screenpipe — capture{% endblock %}
+{% block content %}
+<div class="ph">
+  <h1>capture controls</h1>
+  <a href="/" class="btn btn-sm btn-ghost">← DASHBOARD</a>
+</div>
+
+<div class="cols-2">
+  <!-- audio -->
+  <div>
+    <div class="section-title">audio recording</div>
+    <div class="row" style="margin-bottom:16px">
+      <button class="btn btn-sm"
+              hx-post="/actions/audio/start"
+              hx-target="#audio-result"
+              hx-swap="innerHTML">START AUDIO</button>
+      <button class="btn btn-sm btn-ghost"
+              hx-post="/actions/audio/stop"
+              hx-target="#audio-result"
+              hx-swap="innerHTML">STOP AUDIO</button>
+    </div>
+    <div id="audio-result"></div>
+
+    <div class="section-title" style="margin-top:28px">audio devices</div>
+    <div id="devices"
+         hx-get="/partials/devices"
+         hx-trigger="load"
+         hx-swap="innerHTML">
+      <div class="empty">loading…</div>
+    </div>
+  </div>
+
+  <!-- pipes -->
+  <div>
+    <div class="section-title">ai pipes</div>
+    <p style="font-size:15px;color:var(--muted);margin-bottom:16px;font-family:var(--font-b)">
+      pipes are automated AI workflows that run against your captured data
+    </p>
+    <div id="pipes"
+         hx-get="/partials/pipes"
+         hx-trigger="load"
+         hx-swap="innerHTML">
+      <div class="empty">loading…</div>
+    </div>
+  </div>
+</div>
+{% endblock %}

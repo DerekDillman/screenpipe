@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}screenpipe — meetings{% endblock %}
+{% block content %}
+<div class="ph">
+  <h1>meetings</h1>
+  <span class="ph-sub">record and review conversations</span>
+</div>
+
+<!-- start meeting form -->
+<div class="add-box">
+  <h3>start new meeting</h3>
+  <form hx-post="/actions/meeting/start"
+        hx-target="#meetings-list"
+        hx-swap="innerHTML"
+        hx-on::after-request="this.reset()">
+    <div class="form-row">
+      <input type="text" name="title" placeholder="meeting title…" required>
+      <button type="submit" class="btn">START RECORDING</button>
+    </div>
+  </form>
+</div>
+
+<!-- meetings list -->
+<div class="section-title">all meetings</div>
+<div id="meetings-list"
+     hx-get="/partials/meetings"
+     hx-trigger="load"
+     hx-swap="innerHTML">
+  <div class="empty">loading…</div>
+</div>
+{% endblock %}

@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% block title %}screenpipe — timeline{% endblock %}
+{% block head %}
+<script>
+(function(){
+  var MAX = 400, paused = false, count = 0, es = null;
+  function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+  function fmt(ts){ try{ return new Date(ts).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit",second:"2-digit"}); }catch(e){ return ""; } }
+
+  function extract(ev){
+    var name = ev.name||"event", d = ev.data||{}, text="", meta="", time="";
+    if(name==="ocr_result"){
+      text=d.text||d.ocr_text||"";
+      meta=[d.app_name,d.window_name].filter(Boolean).join(" · ");
+      time=fmt(d.timestamp);
+    } else if(name==="ui_frame"){
+      text=d.text||"";
+      meta=[d.app_name,d.window_name].filter(Boolean).join(" · ");
+      time=fmt(d.timestamp);
+    } else if(name==="audio"){
+      text=d.transcription||d.text||"";
+      meta=d.device_name||"";
+      time=fmt(d.timestamp);
+    } else {
+      var s=typeof d==="string"?d:JSON.stringify(d);
+      text=s.length>300?s.slice(0,300)+"…":s;
+    }
+    if(!text.trim()){ var s2=typeof d==="string"?d:JSON.stringify(d); text=s2.length>300?s2.slice(0,300)+"…":s2; }
+    return {name:name,text:text.trim(),meta:meta,time:time};
+  }
+
+  function addCard(ev){
+    var feed=document.getElementById("feed");
+    if(!feed) return;
+    var empty=document.getElementById("empty-state");
+    if(empty) empty.remove();
+    var info=extract(ev);
+    var card=document.createElement("div");
+    card.className="event-card";
+    card.innerHTML=
+      '<div class="event-name">'+esc(info.name.replace(/_/g," "))+"</div>"+
+      '<div class="event-text">'+esc(info.text)+"</div>"+
+      (info.time||info.meta?'<div class="event-meta">'+(info.time?esc(info.time):"")+(info.time&&info.meta?" · ":"")+(info.meta?esc(info.meta):"")+"</div>":"");
+    feed.prepend(card);
+    while(feed.children.length>MAX) feed.removeChild(feed.lastChild);
+    document.getElementById("ev-count").textContent=++count;
+  }
+
+  function setStatus(live, label){
+    var dot=document.getElementById("s-dot"), lbl=document.getElementById("s-label");
+    if(dot) dot.className="dot"+(live?" on":" off");
+    if(lbl) lbl.textContent=label;
+  }
+
+  function connect(){
+    if(es){ es.close(); es=null; }
+    setStatus(false,"connecting…");
+    es=new EventSource("/sse/events");
+    es.onopen=function(){ setStatus(true,"connected"); };
+    es.onmessage=function(e){
+      if(paused) return;
+      try{ addCard(JSON.parse(e.data)); }catch(err){}
+    };
+    es.onerror=function(){ setStatus(false,"disconnected — retrying…"); };
+  }
+
+  document.addEventListener("DOMContentLoaded",function(){
+    connect();
+    document.getElementById("btn-pause").addEventListener("click",function(){
+      paused=!paused; this.textContent=paused?"RESUME":"PAUSE";
+    });
+    document.getElementById("btn-clear").addEventListener("click",function(){
+      var f=document.getElementById("feed"); if(f) f.innerHTML="";
+      count=0; document.getElementById("ev-count").textContent="0";
+    });
+  });
+}());
+</script>
+{% endblock %}
+{% block content %}
+<div class="ph">
+  <h1>live timeline</h1>
+</div>
+
+<div class="live-bar">
+  <div class="status-pill">
+    <span id="s-dot" class="dot"></span>
+    <span id="s-label" class="mono">connecting…</span>
+  </div>
+  <span class="mono" style="font-size:11px;color:var(--muted)"><span id="ev-count">0</span> events</span>
+  <button id="btn-pause" class="btn btn-sm btn-ghost">PAUSE</button>
+  <button id="btn-clear" class="btn btn-sm btn-ghost">CLEAR</button>
+</div>
+
+<div id="feed">
+  <div class="empty" id="empty-state">waiting for events from screenpipe…</div>
+</div>
+{% endblock %}
