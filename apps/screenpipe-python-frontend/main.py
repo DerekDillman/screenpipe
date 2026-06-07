@@ -12,7 +12,6 @@ import httpx
 import websockets
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse, StreamingResponse
-from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
 SCREENPIPE_API = "http://localhost:3030"
@@ -24,12 +23,12 @@ templates = Jinja2Templates(directory="templates")
 
 @app.get("/", response_class=HTMLResponse)
 async def home(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request})
+    return templates.TemplateResponse(request, "index.html")
 
 
 @app.get("/search", response_class=HTMLResponse)
 async def search_page(request: Request):
-    return templates.TemplateResponse("search.html", {"request": request})
+    return templates.TemplateResponse(request, "search.html")
 
 
 @app.get("/search/results", response_class=HTMLResponse)
@@ -73,9 +72,9 @@ async def search_results(
         error = str(exc)
 
     return templates.TemplateResponse(
+        request,
         "partials/results.html",
         {
-            "request": request,
             "data": data,
             "error": error,
             "q": q or "",
@@ -92,7 +91,7 @@ async def search_results(
 
 @app.get("/live", response_class=HTMLResponse)
 async def live_page(request: Request):
-    return templates.TemplateResponse("live.html", {"request": request})
+    return templates.TemplateResponse(request, "live.html")
 
 
 async def _proxy_ws_as_sse() -> AsyncGenerator[str, None]:
